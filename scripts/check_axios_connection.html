@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Axios Connections to Python Services</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .services {
+            display: flex;
+            gap: 20px;
+        }
+        .service-card {
+            flex: 1;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            margin-bottom: 20px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+        .success {
+            color: green;
+            font-weight: bold;
+        }
+        pre {
+            background-color: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        .status {
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        #qr-image {
+            max-width: 200px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Axios Connections to Python Services</h1>
+    
+    <div class="services">
+        <div class="service-card">
+            <h2>ChatBot API</h2>
+            <p>Test connection to the ChatBot service running on port 8000.</p>
+            
+            <button onclick="testChatBotConnection()">Test Connection</button>
+            <button onclick="sendChatBotQuery()">Send Test Query</button>
+            
+            <div id="chatbot-status" class="status">Status: Waiting for test</div>
+            
+            <h3>Response:</h3>
+            <pre id="chatbot-response">No response yet</pre>
+        </div>
+        
+        <div class="service-card">
+            <h2>QR Code API</h2>
+            <p>Test connection to the QR Code service running on port 8001.</p>
+            
+            <button onclick="testQRCodeConnection()">Test Connection</button>
+            <button onclick="generateQRCode()">Generate QR Code</button>
+            
+            <div id="qrcode-status" class="status">Status: Waiting for test</div>
+            
+            <h3>Response:</h3>
+            <pre id="qrcode-response">No response yet</pre>
+            <div id="qr-image"></div>
+        </div>
+    </div>
+    
+    <script>
+        // URLs for the API services
+        const CHATBOT_API_URL = 'http://localhost:8000';
+        const QRCODE_API_URL = 'http://localhost:8001';
+        
+        // Test ChatBot API connection
+        async function testChatBotConnection() {
+            const statusElement = document.getElementById('chatbot-status');
+            const responseElement = document.getElementById('chatbot-response');
+            
+            statusElement.textContent = 'Status: Testing...';
+            statusElement.className = 'status';
+            
+            try {
+                const response = await axios.get(`${CHATBOT_API_URL}/test`);
+                
+                statusElement.textContent = 'Status: Connected ✅';
+                statusElement.className = 'status success';
+                responseElement.textContent = JSON.stringify(response.data, null, 2);
+                
+                console.log('ChatBot API Response:', response.data);
+            } catch (error) {
+                statusElement.textContent = 'Status: Connection Failed ❌';
+                statusElement.className = 'status error';
+                
+                if (error.response) {
+                    responseElement.textContent = `Error ${error.response.status}: ${JSON.stringify(error.response.data, null, 2)}`;
+                } else if (error.request) {
+                    responseElement.textContent = 'No response received. The server might be offline.';
+                } else {
+                    responseElement.textContent = `Error: ${error.message}`;
+                }
+                
+                console.error('ChatBot API Error:', error);
+            }
+        }
+        
+        // Send a test query to ChatBot
+        async function sendChatBotQuery() {
+            const statusElement = document.getElementById('chatbot-status');
+            const responseElement = document.getElementById('chatbot-response');
+            
+            statusElement.textContent = 'Status: Sending query...';
+            statusElement.className = 'status';
+            
+            try {
+                const response = await axios.get(`${CHATBOT_API_URL}/direct-query`, {
+                    params: {
+                        query: 'xin chào'
+                    }
+                });
+                
+                statusElement.textContent = 'Status: Query Successful ✅';
+                statusElement.className = 'status success';
+                responseElement.textContent = JSON.stringify(response.data, null, 2);
+                
+                console.log('ChatBot Query Response:', response.data);
+            } catch (error) {
+                statusElement.textContent = 'Status: Query Failed ❌';
+                statusElement.className = 'status error';
+                
+                if (error.response) {
+                    responseElement.textContent = `Error ${error.response.status}: ${JSON.stringify(error.response.data, null, 2)}`;
+                } else if (error.request) {
+                    responseElement.textContent = 'No response received. The server might be offline.';
+                } else {
+                    responseElement.textContent = `Error: ${error.message}`;
+                }
+                
+                console.error('ChatBot Query Error:', error);
+            }
+        }
+        
+        // Test QR Code API connection
+        async function testQRCodeConnection() {
+            const statusElement = document.getElementById('qrcode-status');
+            const responseElement = document.getElementById('qrcode-response');
+            document.getElementById('qr-image').innerHTML = '';
+            
+            statusElement.textContent = 'Status: Testing...';
+            statusElement.className = 'status';
+            
+            try {
+                const response = await axios.get(`${QRCODE_API_URL}/health`);
+                
+                statusElement.textContent = 'Status: Connected ✅';
+                statusElement.className = 'status success';
+                responseElement.textContent = JSON.stringify(response.data, null, 2);
+                
+                console.log('QR Code API Response:', response.data);
+            } catch (error) {
+                statusElement.textContent = 'Status: Connection Failed ❌';
+                statusElement.className = 'status error';
+                
+                if (error.response) {
+                    responseElement.textContent = `Error ${error.response.status}: ${JSON.stringify(error.response.data, null, 2)}`;
+                } else if (error.request) {
+                    responseElement.textContent = 'No response received. The server might be offline.';
+                } else {
+                    responseElement.textContent = `Error: ${error.message}`;
+                }
+                
+                console.error('QR Code API Error:', error);
+            }
+        }
+        
+        // Generate a QR Code
+        async function generateQRCode() {
+            const statusElement = document.getElementById('qrcode-status');
+            const responseElement = document.getElementById('qrcode-response');
+            const imageContainer = document.getElementById('qr-image');
+            
+            statusElement.textContent = 'Status: Generating QR Code...';
+            statusElement.className = 'status';
+            imageContainer.innerHTML = '';
+            
+            try {
+                const response = await axios.get(`${QRCODE_API_URL}/generate`, {
+                    params: {
+                        amount: 100000,
+                        bankType: 'mbbank',
+                        order_id: 'test123'
+                    }
+                });
+                
+                statusElement.textContent = 'Status: QR Generated ✅';
+                statusElement.className = 'status success';
+                
+                // Show response (truncate the QR image base64 for readability)
+                const responseData = { ...response.data };
+                if (responseData.qr_image_base64) {
+                    responseData.qr_image_base64 = responseData.qr_image_base64.substring(0, 50) + '... (truncated)';
+                }
+                responseElement.textContent = JSON.stringify(responseData, null, 2);
+                
+                // Display the QR code image
+                if (response.data.qr_image_base64) {
+                    const img = document.createElement('img');
+                    img.src = `data:image/png;base64,${response.data.qr_image_base64}`;
+                    img.style.maxWidth = '100%';
+                    imageContainer.appendChild(img);
+                }
+                
+                console.log('QR Code Generated:', response.data);
+            } catch (error) {
+                statusElement.textContent = 'Status: QR Generation Failed ❌';
+                statusElement.className = 'status error';
+                
+                if (error.response) {
+                    responseElement.textContent = `Error ${error.response.status}: ${JSON.stringify(error.response.data, null, 2)}`;
+                } else if (error.request) {
+                    responseElement.textContent = 'No response received. The server might be offline.';
+                } else {
+                    responseElement.textContent = `Error: ${error.message}`;
+                }
+                
+                console.error('QR Code Generation Error:', error);
+            }
+        }
+    </script>
+</body>
+</html> 
